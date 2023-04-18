@@ -82,6 +82,8 @@ local.properties
 
 # Package Files #
 *.jar
+!je*.jar
+!sqlite*.jar
 *.war
 *.nar
 *.ear
