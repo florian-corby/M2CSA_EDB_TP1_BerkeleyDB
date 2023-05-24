@@ -16,7 +16,7 @@ import java.io.File;
  */
 public abstract class EnvDbManager implements DbManager {
 	/* The managed database environment handle. */
-	protected final Environment env;
+	public final Environment env;
 
 	/* The current open transaction. */
 	private Transaction currentTxn;
@@ -69,7 +69,7 @@ public abstract class EnvDbManager implements DbManager {
 	 *
 	 * @return an open transaction
 	 */
-	protected Transaction getCurrentTxn() {
+	public Transaction getCurrentTxn() {
 		return currentTxn;
 	}
 }
