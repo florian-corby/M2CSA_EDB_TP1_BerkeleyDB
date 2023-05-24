@@ -11,19 +11,19 @@ import com.sleepycat.persist.model.PrimaryKey;
 public class Client {
 	/* The ticket id. */
 	@PrimaryKey
-	private Long clientId;
+	private String clientId;
 
 	/* The percentage (0 <= factor <= 1) of the subscription 
 	 * reduction for this client */
 	private Double subscriptionFactor;
 
 
-	public Client(Long clientId, Double subscriptionFactor) {
+	public Client(String clientId, Double subscriptionFactor) {
 		this.clientId = clientId;
 		this.subscriptionFactor = subscriptionFactor;
 	}
 
-	public long getId() {
+	public String getId() {
 		return clientId;
 	}
 

@@ -8,7 +8,7 @@ import ut3.labwork.data.Client;
  */
 public interface ClientDAO extends AutoCloseable {
 
-	Long saveClient(Client client) throws Exception;
+	String saveClient(Client client) throws Exception;
 
-	Client getClient(Long clientId) throws Exception;
+	Client getClient(String clientId) throws Exception;
 }

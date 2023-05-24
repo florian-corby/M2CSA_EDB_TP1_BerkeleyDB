@@ -1,13 +1,17 @@
 package ut3.labwork;
 
-import com.sleepycat.sample.DbManagerFactory;
-import com.sleepycat.sample.data.Ticket;
-import com.sleepycat.sample.dbinterface.DbManager;
-import com.sleepycat.sample.park.Meter;
-import com.sleepycat.sample.park.Reporting;
-
 import java.text.SimpleDateFormat;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import ut3.labwork.data.Ticket;
+import ut3.labwork.dbinterface.DbManager;
+import ut3.labwork.park.Meter;
+import ut3.labwork.park.Reporting;
 
 /**
  * The parking demo application.
@@ -42,7 +46,7 @@ public class Ut3ParkingDemo {
 		     Meter meter = new Meter("meter", mgr)) {
 			for (DemoData.SimEvent e : DemoData.getEventsSortedByTime()) {
 				if (e.isPark) {
-					Ticket t = meter.park(new Date(e.time));
+					Ticket t = meter.park(e.carName, new Date(e.time));
 					ticketMap.put(e.carName, t);
 					System.out.println(e.carName + " has entered the parking" +
 							"lot and got ticket " + t.getTicketId());
