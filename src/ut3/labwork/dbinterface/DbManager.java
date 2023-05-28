@@ -41,6 +41,14 @@ public interface DbManager extends AutoCloseable {
 	 * @throws Exception on error
 	 */
 	TicketLogDAO createTicketLogDAO() throws Exception;
+	
+	/**
+	 * Create a data access object for persisting Subscription plans.
+	 *
+	 * @return a SubscriptionPlanDAO object
+	 * @throws Exception on error
+	 */
+	SubscriptionPlanDAO createSubscriptionPlanDAO() throws Exception;
 
 	/**
 	 * Begin a database transaction.

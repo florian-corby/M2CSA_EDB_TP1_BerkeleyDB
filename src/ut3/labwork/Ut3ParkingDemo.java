@@ -9,9 +9,11 @@ import java.util.List;
 import java.util.Map;
 
 import ut3.labwork.data.Client;
+import ut3.labwork.data.SubscriptionPlan;
 import ut3.labwork.data.Ticket;
 import ut3.labwork.dbinterface.ClientDAO;
 import ut3.labwork.dbinterface.DbManager;
+import ut3.labwork.dbinterface.SubscriptionPlanDAO;
 import ut3.labwork.park.Meter;
 import ut3.labwork.park.Reporting;
 
@@ -49,33 +51,17 @@ public class Ut3ParkingDemo {
 				Meter meter = new Meter("meter", mgr)) {
 
 			// I fill up my subscribed customers table
-			mgr.beginTxn();
-			ClientDAO clientDAO = mgr.createClientDAO();
-			try {
-				for(Client c : DemoData.getSimClients()) {
-					clientDAO.saveClient(c);
-				}
-				mgr.commit();
-			} catch (Exception e) {
-				mgr.abort();
-				throw e;
-			}
-			clientDAO.close();
+			DemoData.getSimClients(mgr);
+			DemoData.getSimPlans(mgr);
 			
 			// I proceed with the simulation which will use the known subscribed client DB
 			for (DemoData.SimEvent e : DemoData.getEventsSortedByTime()) {
 				if (e.isPark) {
-					Ticket t = meter.park(new Client(e.carName, e.subscriptionFactor), new Date(e.time));
+					Ticket t = meter.park(new Client(e.carName, e.clientFormula), new Date(e.time));
 					ticketMap.put(e.carName, t);
-					System.out.println(e.carName + " has entered the parking" +
-							"lot at " + e.getDateTime() + " and got ticket " + t.getTicketId());
 				} else {
 					Ticket t = ticketMap.get(e.carName);
-					int fee = meter.depart(t, new Date(e.time));
-					System.out.println(e.carName + " with a reduction of " + e.subscriptionFactor*100 +
-							"% has left the parking lot at " + e.getDateTime() +
-							" and paid " + fee / 100 + " dollar(s) " +
-							fee % 100 + " cent(s)");
+					meter.depart(t, new Date(e.time));
 				}
 			}
 		}
@@ -111,22 +97,55 @@ class DemoData {
 	 * {<car name>, <park time>, <depart time>}
 	 */
 	private static String[][] data = {
-			{"AQ-170-UZ", "0.5", "2014-12-20T01:12:00", "2014-12-20T21:10:15"},
-			{"LS-182-TL", "0.8", "2014-12-20T02:03:25", "2014-12-20T03:12:50"},
-			{"FC-184-PO", "0.2", "2014-12-20T03:05:12", null},
-			{"MS-168-LB", "0.0", "2014-12-19T21:02:14", "2014-12-20T00:02:10"},
-			{"AM-165-NA", "1.0", "2014-12-20T22:05:37", "2014-12-21T02:05:32"}
+			{"AQ-170-UZ", "Gold", "2014-12-20T01:12:00", "2014-12-20T21:10:15"},
+			{"LS-182-TL", "Silver", "2014-12-20T02:03:25", "2014-12-20T03:12:50"},
+			{"FC-184-PO", "Bronze", "2014-12-20T03:05:12", null},
+			{"MS-168-LB", "NoPlan", "2014-12-19T21:02:14", "2014-12-20T00:02:10"},
+			{"AM-165-NA", "Personel", "2014-12-20T22:05:37", "2014-12-21T02:05:32"}
 	};
-
-	public static List<Client> getSimClients() {
-		List<Client> allClients = new ArrayList<>(data.length);
-		
-		for (String[] row : data) {
-			Client c = new Client(row[0], Double.parseDouble(row[1]));
-			allClients.add(c);
+	
+	/*
+	 * The existing subscription plans and their associations with the clients. 
+	 * Each client can only have one subscription at a time here.
+	 */
+	private static String[][] subscriptionPlans = {
+			{"NoPlan", "0.0"},
+			{"Bronze", "0.2"},
+			{"Silver", "0.5"},
+			{"Gold", "0.8"},
+			{"Personel", "1.0"}
+	};
+	
+	public static void  getSimPlans(DbManager mgr) throws Exception {
+		mgr.beginTxn();
+		SubscriptionPlanDAO subscriptionPlanDAO = mgr.createSubscriptionPlanDAO();
+		try {
+			for(String[] row : subscriptionPlans) {
+				SubscriptionPlan p = new SubscriptionPlan(row[0], Double.parseDouble(row[1]));
+				subscriptionPlanDAO.saveFormula(p);
+			}
+			mgr.commit();
+		} catch (Exception e) {
+			mgr.abort();
+			throw e;
 		}
+		subscriptionPlanDAO.close();
+	}
 
-		return allClients;
+	public static void getSimClients(DbManager mgr) throws Exception {
+		mgr.beginTxn();
+		ClientDAO clientDAO = mgr.createClientDAO();
+		try {
+			for(String[] row : data) {
+				Client c = new Client(row[0], row[1]);
+				clientDAO.saveClient(c);
+			}
+			mgr.commit();
+		} catch (Exception e) {
+			mgr.abort();
+			throw e;
+		}
+		clientDAO.close();
 	}
 
 	/* Convert the raw data to SimEvents and sort them by time. */
@@ -136,10 +155,10 @@ class DemoData {
 
 		for (String[] row : data) {
 			events.add(new SimEvent(
-					row[0], Double.parseDouble(row[1]), fmt.parse(row[2]).getTime(), true));
+					row[0], row[1], fmt.parse(row[2]).getTime(), true));
 			if (row[3] != null) {
 				events.add(new SimEvent(
-						row[0], Double.parseDouble(row[1]), fmt.parse(row[3]).getTime(), false));
+						row[0], row[1], fmt.parse(row[3]).getTime(), false));
 			}
 		}
 
@@ -153,15 +172,15 @@ class DemoData {
 		/* The car name. */
 		String carName;
 		/* The subscriber reduction */
-		Double subscriptionFactor;
+		String clientFormula;
 		/* The time of the event. */
 		Long time;
 		/* The event: true for park; false for depart. */
 		boolean isPark;
 
-		public SimEvent(String carName, Double subscriptionFactor, Long time, boolean isPark) {
+		public SimEvent(String carName, String clientFormula, Long time, boolean isPark) {
 			this.carName = carName;
-			this.subscriptionFactor = subscriptionFactor;
+			this.clientFormula = clientFormula;
 			this.time = time;
 			this.isPark = isPark;
 		}

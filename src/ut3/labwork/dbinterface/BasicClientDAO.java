@@ -55,13 +55,13 @@ public class BasicClientDAO implements ClientDAO {
 	private static class ClientBinding extends TupleBinding<Client> {
 		@Override
 		public Client entryToObject(TupleInput in) {
-			return new Client(in.readString(), in.readDouble());
+			return new Client(in.readString(), in.readString());
 		}
 
 		@Override
 		public void objectToEntry(Client client, TupleOutput out) {
 			out.writeString(client.getId());
-			out.writeDouble(client.getSubscriptionFactor());
+			out.writeString(client.getFormulaId());
 		}
 	}
 
@@ -71,7 +71,7 @@ public class BasicClientDAO implements ClientDAO {
 		DatabaseEntry value = new DatabaseEntry();
 
 		valueBinding.objectToEntry(
-				new Client(client.getId(), client.getSubscriptionFactor()), value);
+				new Client(client.getId(), client.getFormulaId()), value);
 		
 		clientDb.putNoOverwrite(dbMgr.getCurrentTxn(), key, value);
 

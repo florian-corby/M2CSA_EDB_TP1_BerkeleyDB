@@ -15,23 +15,19 @@ public class Client {
 
 	/* The percentage (0 <= factor <= 1) of the subscription 
 	 * reduction for this client */
-	private Double subscriptionFactor;
+	private String formulaId;
 
 
-	public Client(String clientId, Double subscriptionFactor) {
+	public Client(String clientId, String formulaId) {
 		this.clientId = clientId;
-		this.subscriptionFactor = 1.0 - subscriptionFactor;
+		this.formulaId = formulaId;
 	}
 
 	public String getId() {
 		return clientId;
 	}
 	
-	public Double getReduction() {
-		return (1.0 - subscriptionFactor) * 100;
-	}
-
-	public Double getSubscriptionFactor() {
-		return subscriptionFactor;
+	public String getFormulaId() {
+		return formulaId;
 	}
 }

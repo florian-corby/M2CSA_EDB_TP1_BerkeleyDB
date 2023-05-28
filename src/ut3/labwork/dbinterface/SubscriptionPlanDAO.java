@@ -1,6 +1,5 @@
 package ut3.labwork.dbinterface;
 
-import ut3.labwork.data.Client;
 import ut3.labwork.data.SubscriptionPlan;
 
 /**
@@ -11,5 +10,5 @@ public interface SubscriptionPlanDAO extends AutoCloseable {
 
 	String saveFormula(SubscriptionPlan plan) throws Exception;
 
-	Client getFormula(String planId) throws Exception;
+	SubscriptionPlan getFormula(String planId) throws Exception;
 }

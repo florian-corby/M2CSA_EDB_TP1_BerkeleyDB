@@ -31,6 +31,9 @@ public class BasicDbManager extends EnvDbManager {
 		createIndex(BasicTicketLogDAO.IDX_DB_NAME,
 				BasicTicketLogDAO.KEY_CREATOR, logDb).close();
 		logDb.close();
+		
+		Database planDb = createDb(BasicSubscriptionPlanDAO.DB_NAME);
+		planDb.close();
 	}
 
 	/**
@@ -98,5 +101,10 @@ public class BasicDbManager extends EnvDbManager {
 	@Override
 	public ClientDAO createClientDAO() throws Exception {
 		return new BasicClientDAO(this);
+	}
+	
+	@Override
+	public SubscriptionPlanDAO createSubscriptionPlanDAO() throws Exception {
+		return new BasicSubscriptionPlanDAO(this);
 	}
 }

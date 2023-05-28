@@ -4,8 +4,10 @@ import ut3.labwork.data.Ticket;
 import ut3.labwork.data.TicketLog;
 
 import ut3.labwork.data.Client;
+import ut3.labwork.data.SubscriptionPlan;
 import ut3.labwork.dbinterface.ClientDAO;
 import ut3.labwork.dbinterface.DbManager;
+import ut3.labwork.dbinterface.SubscriptionPlanDAO;
 import ut3.labwork.dbinterface.TicketDAO;
 import ut3.labwork.dbinterface.TicketLogDAO;
 
@@ -26,14 +28,10 @@ public class Meter implements AutoCloseable {
 	/* The database manager used by this meter. */
 	private final DbManager dbMgr;
 	
-	/* The ticket data access object. */
 	private final ClientDAO clientDAO;
-
-	/* The ticket data access object. */
 	private final TicketDAO ticketDAO;
-
-	/* The log message data access object. */
 	private final TicketLogDAO logDAO;
+	private final SubscriptionPlanDAO subscriptionPlanDAO;
 	
 
 	/**
@@ -49,6 +47,7 @@ public class Meter implements AutoCloseable {
 		clientDAO = dbMgr.createClientDAO();
 		ticketDAO = dbMgr.createTicketDAO();
 		logDAO = dbMgr.createTicketLogDAO();
+		subscriptionPlanDAO = dbMgr.createSubscriptionPlanDAO();
 	}
 
 	@Override
@@ -56,6 +55,7 @@ public class Meter implements AutoCloseable {
 		clientDAO.close();
 		ticketDAO.close();
 		logDAO.close();
+		subscriptionPlanDAO.close();
 	}
 
 	/**
@@ -74,6 +74,10 @@ public class Meter implements AutoCloseable {
 			logDAO.saveLog(new TicketLog(
 					time.getTime(), id, ticketId, TicketLog.Action.ISSUE, 0));
 			dbMgr.commit();
+			
+			System.out.println(client.getId() + " with the subscription plan " + client.getFormulaId() 
+				+ " has entered the parking lot at " + time + " and got ticket " + t.getTicketId());
+			
 			return new Ticket(client.getId(), ticketId, id, time.getTime());
 		} catch (Exception e) {
 			dbMgr.abort();
@@ -96,18 +100,20 @@ public class Meter implements AutoCloseable {
 		try {
 			Ticket ticket = ticketDAO.getTicket(t.getTicketId());
 			Client client = clientDAO.getClient(t.getClientId());
-			int fee = computeFee(ticket, time, client.getSubscriptionFactor());
+			SubscriptionPlan plan = subscriptionPlanDAO.getFormula(client.getFormulaId());
+			int fee = computeFee(ticket, time, plan.getRedFactor());
 			
 			logDAO.saveLog(new TicketLog(time.getTime(),
 					id, ticket.getTicketId(), TicketLog.Action.CHARGE, fee));
 			ticketDAO.deleteTicket(ticket.getTicketId());
-			dbMgr.commit();
 			
-			/*System.out.println(client.getId() + " with a reduction of " + client.getReduction() +
+			System.out.println(client.getId() + " with a reduction of " + 
+					(Math.round(Math.floor(plan.getRed()  * 100) / 100)) +
 					"% has left the parking lot at " + time +
 					" and paid " + fee / 100 + " dollar(s) " +
-					fee % 100 + " cent(s)");*/
+					fee % 100 + " cent(s)");
 			
+			dbMgr.commit();
 			return fee;
 		} catch (Exception e) {
 			dbMgr.abort();

@@ -9,7 +9,6 @@ import com.sleepycat.je.DatabaseEntry;
 import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
-import ut3.labwork.data.Client;
 import ut3.labwork.data.SubscriptionPlan;
 
 /**
@@ -26,7 +25,7 @@ public class BasicSubscriptionPlanDAO implements SubscriptionPlanDAO {
 	private final Database planDb;
 
 	/* The binding for value database entries. */
-	private final ClientBinding valueBinding;
+	private final SubscriptionPlanBinding valueBinding;
 	
 	
 	/**
@@ -42,7 +41,7 @@ public class BasicSubscriptionPlanDAO implements SubscriptionPlanDAO {
 		dbConfig.setTransactional(true);
 		planDb = dbMgr.env.openDatabase(null, DB_NAME, dbConfig);
 
-		valueBinding = new ClientBinding();
+		valueBinding = new SubscriptionPlanBinding();
 	}
 
 	@Override
@@ -53,16 +52,16 @@ public class BasicSubscriptionPlanDAO implements SubscriptionPlanDAO {
 	/**
 	 * Helper class to convert between clients and byte arrays.
 	 */
-	private static class ClientBinding extends TupleBinding<Client> {
+	private static class SubscriptionPlanBinding extends TupleBinding<SubscriptionPlan> {
 		@Override
-		public Client entryToObject(TupleInput in) {
-			return new Client(in.readString(), in.readDouble());
+		public SubscriptionPlan entryToObject(TupleInput in) {
+			return new SubscriptionPlan(in.readString(), in.readDouble());
 		}
 
 		@Override
-		public void objectToEntry(Client client, TupleOutput out) {
-			out.writeString(client.getId());
-			out.writeDouble(client.getSubscriptionFactor());
+		public void objectToEntry(SubscriptionPlan plan, TupleOutput out) {
+			out.writeString(plan.getId());
+			out.writeDouble(plan.getRed());
 		}
 	}
 
@@ -70,9 +69,9 @@ public class BasicSubscriptionPlanDAO implements SubscriptionPlanDAO {
 	public String saveFormula(SubscriptionPlan plan) throws Exception {
 		DatabaseEntry key = new DatabaseEntry(plan.getId().getBytes("UTF-8"));
 		DatabaseEntry value = new DatabaseEntry();
-
+		
 		valueBinding.objectToEntry(
-				new Client(plan.getId(), plan.getRedFactor()), value);
+				new SubscriptionPlan(plan.getId(), plan.getRed()), value);
 		
 		planDb.putNoOverwrite(dbMgr.getCurrentTxn(), key, value);
 
@@ -80,7 +79,7 @@ public class BasicSubscriptionPlanDAO implements SubscriptionPlanDAO {
 	}
 
 	@Override
-	public Client getFormula(String planId) throws Exception {
+	public SubscriptionPlan getFormula(String planId) throws Exception {
 		DatabaseEntry key = new DatabaseEntry(planId.getBytes("UTF-8"));
 		DatabaseEntry value = new DatabaseEntry();
 
