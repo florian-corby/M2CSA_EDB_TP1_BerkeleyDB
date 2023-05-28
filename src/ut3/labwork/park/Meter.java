@@ -2,7 +2,6 @@ package ut3.labwork.park;
 
 import ut3.labwork.data.Ticket;
 import ut3.labwork.data.TicketLog;
-
 import ut3.labwork.data.Client;
 import ut3.labwork.data.SubscriptionPlan;
 import ut3.labwork.dbinterface.ClientDAO;
@@ -76,7 +75,7 @@ public class Meter implements AutoCloseable {
 			dbMgr.commit();
 			
 			System.out.println(client.getId() + " with the subscription plan " + client.getFormulaId() 
-				+ " has entered the parking lot at " + time + " and got ticket " + t.getTicketId());
+				+ " has entered the parking lot at " + time + " and got ticket " + ticketId);
 			
 			return new Ticket(client.getId(), ticketId, id, time.getTime());
 		} catch (Exception e) {
