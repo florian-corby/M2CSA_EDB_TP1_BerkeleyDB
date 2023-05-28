@@ -10,7 +10,6 @@ import ut3.labwork.dbinterface.TicketDAO;
 import ut3.labwork.dbinterface.TicketLogDAO;
 
 import java.util.Date;
-import java.util.Random;
 
 /**
  * The Meter class represents a parking meter which can issue parking tickets
@@ -36,7 +35,6 @@ public class Meter implements AutoCloseable {
 	/* The log message data access object. */
 	private final TicketLogDAO logDAO;
 	
-	private final Random rand = new Random();
 
 	/**
 	 * Create a parking meter.
@@ -67,17 +65,16 @@ public class Meter implements AutoCloseable {
 	 * @return a parking ticket
 	 * @throws Exception on error
 	 */
-	public Ticket park(String clientId, Date time) throws Exception {
-		Ticket t = new Ticket(clientId, 0L, id, time.getTime());
+	public Ticket park(Client client, Date time) throws Exception {
+		Ticket t = new Ticket(client.getId(), 0L, id, time.getTime());
 
 		dbMgr.beginTxn();
 		try {
 			Long ticketId = ticketDAO.saveTicket(t);
-			clientDAO.saveClient(new Client(clientId, rand.nextDouble(0., 1.)));
 			logDAO.saveLog(new TicketLog(
 					time.getTime(), id, ticketId, TicketLog.Action.ISSUE, 0));
 			dbMgr.commit();
-			return new Ticket(clientId, ticketId, id, time.getTime());
+			return new Ticket(client.getId(), ticketId, id, time.getTime());
 		} catch (Exception e) {
 			dbMgr.abort();
 			throw e;
@@ -100,10 +97,17 @@ public class Meter implements AutoCloseable {
 			Ticket ticket = ticketDAO.getTicket(t.getTicketId());
 			Client client = clientDAO.getClient(t.getClientId());
 			int fee = computeFee(ticket, time, client.getSubscriptionFactor());
+			
 			logDAO.saveLog(new TicketLog(time.getTime(),
 					id, ticket.getTicketId(), TicketLog.Action.CHARGE, fee));
 			ticketDAO.deleteTicket(ticket.getTicketId());
 			dbMgr.commit();
+			
+			/*System.out.println(client.getId() + " with a reduction of " + client.getReduction() +
+					"% has left the parking lot at " + time +
+					" and paid " + fee / 100 + " dollar(s) " +
+					fee % 100 + " cent(s)");*/
+			
 			return fee;
 		} catch (Exception e) {
 			dbMgr.abort();

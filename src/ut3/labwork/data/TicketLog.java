@@ -53,10 +53,6 @@ public class TicketLog {
 		this.chargeAmountInCents = chargeAmountInCents;
 	}
 
-	/* For DPL binding only. */
-	private TicketLog() {
-	}
-
 	/**
 	 * Get the time of the logged action.
 	 *

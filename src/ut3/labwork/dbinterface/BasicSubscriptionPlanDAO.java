@@ -10,43 +10,44 @@ import com.sleepycat.je.LockMode;
 import com.sleepycat.je.OperationStatus;
 
 import ut3.labwork.data.Client;
+import ut3.labwork.data.SubscriptionPlan;
 
 /**
  * BasicTicketLogDAO is a TicketLogDAO implementation using the base API.
  */
-public class BasicClientDAO implements ClientDAO {
+public class BasicSubscriptionPlanDAO implements SubscriptionPlanDAO {
 	/* The file name of the client log database. */
-	static final String DB_NAME = "client.db";
+	static final String DB_NAME = "plan.db";
 
 	/* The database manager from which this DAO is created. */
 	private final BasicDbManager dbMgr;
 
 	/* The client database handle. */
-	private final Database clientDb;
+	private final Database planDb;
 
 	/* The binding for value database entries. */
 	private final ClientBinding valueBinding;
 	
 	
 	/**
-	 * Create a data access object for ticket logs.
+	 * Create a data access object for subscription plans.
 	 *
 	 * @param dbManager the database manager creating this object
 	 * @throws Exception on error
 	 */
-	public BasicClientDAO(BasicDbManager dbManager) throws Exception {
+	public BasicSubscriptionPlanDAO(BasicDbManager dbManager) throws Exception {
 		dbMgr = dbManager;
 
 		DatabaseConfig dbConfig = new DatabaseConfig();
 		dbConfig.setTransactional(true);
-		clientDb = dbMgr.env.openDatabase(null, DB_NAME, dbConfig);
-		
+		planDb = dbMgr.env.openDatabase(null, DB_NAME, dbConfig);
+
 		valueBinding = new ClientBinding();
 	}
 
 	@Override
 	public void close() throws Exception {
-		clientDb.close();
+		planDb.close();
 	}
 
 	/**
@@ -66,24 +67,24 @@ public class BasicClientDAO implements ClientDAO {
 	}
 
 	@Override
-	public String saveClient(Client client) throws Exception {
-		DatabaseEntry key = new DatabaseEntry(client.getId().getBytes("UTF-8"));
+	public String saveFormula(SubscriptionPlan plan) throws Exception {
+		DatabaseEntry key = new DatabaseEntry(plan.getId().getBytes("UTF-8"));
 		DatabaseEntry value = new DatabaseEntry();
 
 		valueBinding.objectToEntry(
-				new Client(client.getId(), client.getSubscriptionFactor()), value);
+				new Client(plan.getId(), plan.getRedFactor()), value);
 		
-		clientDb.putNoOverwrite(dbMgr.getCurrentTxn(), key, value);
+		planDb.putNoOverwrite(dbMgr.getCurrentTxn(), key, value);
 
-		return client.getId();	
+		return plan.getId();	
 	}
 
 	@Override
-	public Client getClient(String clientId) throws Exception {
-		DatabaseEntry key = new DatabaseEntry(clientId.getBytes("UTF-8"));
+	public Client getFormula(String planId) throws Exception {
+		DatabaseEntry key = new DatabaseEntry(planId.getBytes("UTF-8"));
 		DatabaseEntry value = new DatabaseEntry();
 
-		OperationStatus s = clientDb.get(
+		OperationStatus s = planDb.get(
 				dbMgr.getCurrentTxn(), key, value, LockMode.READ_COMMITTED);
 
 		if (s == OperationStatus.SUCCESS) {

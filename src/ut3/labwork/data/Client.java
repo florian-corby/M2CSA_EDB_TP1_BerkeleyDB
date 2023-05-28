@@ -20,11 +20,15 @@ public class Client {
 
 	public Client(String clientId, Double subscriptionFactor) {
 		this.clientId = clientId;
-		this.subscriptionFactor = subscriptionFactor;
+		this.subscriptionFactor = 1.0 - subscriptionFactor;
 	}
 
 	public String getId() {
 		return clientId;
+	}
+	
+	public Double getReduction() {
+		return (1.0 - subscriptionFactor) * 100;
 	}
 
 	public Double getSubscriptionFactor() {

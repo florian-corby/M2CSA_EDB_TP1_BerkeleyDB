@@ -8,7 +8,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import ut3.labwork.data.Client;
 import ut3.labwork.data.Ticket;
+import ut3.labwork.dbinterface.ClientDAO;
 import ut3.labwork.dbinterface.DbManager;
 import ut3.labwork.park.Meter;
 import ut3.labwork.park.Reporting;
@@ -42,23 +44,42 @@ public class Ut3ParkingDemo {
 		// Create a parking meter and run the simulated events
 		System.out.println("======= UT3 Simulation starts =======");
 		Map<String, Ticket> ticketMap = new HashMap<>();
+
 		try (DbManager mgr = factory.createManager();
-		     Meter meter = new Meter("meter", mgr)) {
+				Meter meter = new Meter("meter", mgr)) {
+
+			// I fill up my subscribed customers table
+			mgr.beginTxn();
+			ClientDAO clientDAO = mgr.createClientDAO();
+			try {
+				for(Client c : DemoData.getSimClients()) {
+					clientDAO.saveClient(c);
+				}
+				mgr.commit();
+			} catch (Exception e) {
+				mgr.abort();
+				throw e;
+			}
+			clientDAO.close();
+			
+			// I proceed with the simulation which will use the known subscribed client DB
 			for (DemoData.SimEvent e : DemoData.getEventsSortedByTime()) {
 				if (e.isPark) {
-					Ticket t = meter.park(e.carName, new Date(e.time));
+					Ticket t = meter.park(new Client(e.carName, e.subscriptionFactor), new Date(e.time));
 					ticketMap.put(e.carName, t);
 					System.out.println(e.carName + " has entered the parking" +
-							"lot and got ticket " + t.getTicketId());
+							"lot at " + e.getDateTime() + " and got ticket " + t.getTicketId());
 				} else {
 					Ticket t = ticketMap.get(e.carName);
 					int fee = meter.depart(t, new Date(e.time));
-					System.out.println(e.carName + " has left the parking lot" +
+					System.out.println(e.carName + " with a reduction of " + e.subscriptionFactor*100 +
+							"% has left the parking lot at " + e.getDateTime() +
 							" and paid " + fee / 100 + " dollar(s) " +
 							fee % 100 + " cent(s)");
 				}
 			}
 		}
+
 		System.out.println("======= UT3 Simulation ends =======");
 
 		// Generate a few reports at the end of the simulation
@@ -66,7 +87,7 @@ public class Ut3ParkingDemo {
 		Date from = fmt.parse("2014-12-20T00:00:00");
 		Date until = fmt.parse("2014-12-21T00:00:00");
 		try (DbManager mgr = factory.createManager();
-		     Reporting rpt = new Reporting(mgr)) {
+				Reporting rpt = new Reporting(mgr)) {
 			int carsParked = rpt.totalCarsParkedDuring(
 					from.getTime(), until.getTime(), "meter");
 			int feesCollected = rpt.totalFeesCollectedDuring(
@@ -90,12 +111,23 @@ class DemoData {
 	 * {<car name>, <park time>, <depart time>}
 	 */
 	private static String[][] data = {
-			{"car1", "2014-12-20T01:12:00", "2014-12-20T21:10:15"},
-			{"car2", "2014-12-20T02:03:25", "2014-12-20T03:12:50"},
-			{"car3", "2014-12-20T03:05:12", null},
-			{"car4", "2014-12-19T21:02:14", "2014-12-20T00:02:10"},
-			{"car5", "2014-12-20T22:05:37", "2014-12-21T02:05:32"}
+			{"AQ-170-UZ", "0.5", "2014-12-20T01:12:00", "2014-12-20T21:10:15"},
+			{"LS-182-TL", "0.8", "2014-12-20T02:03:25", "2014-12-20T03:12:50"},
+			{"FC-184-PO", "0.2", "2014-12-20T03:05:12", null},
+			{"MS-168-LB", "0.0", "2014-12-19T21:02:14", "2014-12-20T00:02:10"},
+			{"AM-165-NA", "1.0", "2014-12-20T22:05:37", "2014-12-21T02:05:32"}
 	};
+
+	public static List<Client> getSimClients() {
+		List<Client> allClients = new ArrayList<>(data.length);
+		
+		for (String[] row : data) {
+			Client c = new Client(row[0], Double.parseDouble(row[1]));
+			allClients.add(c);
+		}
+
+		return allClients;
+	}
 
 	/* Convert the raw data to SimEvents and sort them by time. */
 	public static List<SimEvent> getEventsSortedByTime() throws Exception {
@@ -104,10 +136,10 @@ class DemoData {
 
 		for (String[] row : data) {
 			events.add(new SimEvent(
-					row[0], fmt.parse(row[1]).getTime(), true));
-			if (row[2] != null) {
+					row[0], Double.parseDouble(row[1]), fmt.parse(row[2]).getTime(), true));
+			if (row[3] != null) {
 				events.add(new SimEvent(
-						row[0], fmt.parse(row[2]).getTime(), false));
+						row[0], Double.parseDouble(row[1]), fmt.parse(row[3]).getTime(), false));
 			}
 		}
 
@@ -120,13 +152,16 @@ class DemoData {
 	public static class SimEvent implements Comparable<SimEvent> {
 		/* The car name. */
 		String carName;
+		/* The subscriber reduction */
+		Double subscriptionFactor;
 		/* The time of the event. */
 		Long time;
 		/* The event: true for park; false for depart. */
 		boolean isPark;
 
-		public SimEvent(String carName, Long time, boolean isPark) {
+		public SimEvent(String carName, Double subscriptionFactor, Long time, boolean isPark) {
 			this.carName = carName;
+			this.subscriptionFactor = subscriptionFactor;
 			this.time = time;
 			this.isPark = isPark;
 		}
@@ -134,6 +169,12 @@ class DemoData {
 		@Override
 		public int compareTo(SimEvent o) {
 			return time.compareTo(o.time);
+		}
+		
+		public String getDateTime() {
+			Date date = new Date(time);
+			SimpleDateFormat format = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
+		    return format.format(date);
 		}
 	}
 }
