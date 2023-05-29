@@ -61,7 +61,7 @@ public class BasicSubscriptionPlanDAO implements SubscriptionPlanDAO {
 		@Override
 		public void objectToEntry(SubscriptionPlan plan, TupleOutput out) {
 			out.writeString(plan.getId());
-			out.writeDouble(plan.getRed());
+			out.writeDouble(plan.getRed()/100.);
 		}
 	}
 
@@ -71,7 +71,7 @@ public class BasicSubscriptionPlanDAO implements SubscriptionPlanDAO {
 		DatabaseEntry value = new DatabaseEntry();
 		
 		valueBinding.objectToEntry(
-				new SubscriptionPlan(plan.getId(), plan.getRed()), value);
+				new SubscriptionPlan(plan.getId(), plan.getRed()/100.), value);
 		
 		planDb.putNoOverwrite(dbMgr.getCurrentTxn(), key, value);
 
@@ -87,6 +87,7 @@ public class BasicSubscriptionPlanDAO implements SubscriptionPlanDAO {
 				dbMgr.getCurrentTxn(), key, value, LockMode.READ_COMMITTED);
 
 		if (s == OperationStatus.SUCCESS) {
+			SubscriptionPlan plan = valueBinding.entryToObject(value);
 			return valueBinding.entryToObject(value);
 		} else {
 			return null;

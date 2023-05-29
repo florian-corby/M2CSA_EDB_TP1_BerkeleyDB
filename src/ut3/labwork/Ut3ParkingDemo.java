@@ -100,7 +100,7 @@ class DemoData {
 			{"AQ-170-UZ", "Gold", "2014-12-20T01:12:00", "2014-12-20T21:10:15"},
 			{"LS-182-TL", "Silver", "2014-12-20T02:03:25", "2014-12-20T03:12:50"},
 			{"FC-184-PO", "Bronze", "2014-12-20T03:05:12", null},
-			{"MS-168-LB", "NoPlan", "2014-12-19T21:02:14", "2014-12-20T00:02:10"},
+			{"MS-168-LB", "Default", "2014-12-19T21:02:14", "2014-12-20T00:02:10"},
 			{"AM-165-NA", "Personel", "2014-12-20T22:05:37", "2014-12-21T02:05:32"}
 	};
 	
@@ -109,7 +109,7 @@ class DemoData {
 	 * Each client can only have one subscription at a time here.
 	 */
 	private static String[][] subscriptionPlans = {
-			{"NoPlan", "0.0"},
+			{"Default", "0.0"},
 			{"Bronze", "0.2"},
 			{"Silver", "0.5"},
 			{"Gold", "0.8"},

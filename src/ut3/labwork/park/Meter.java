@@ -107,7 +107,7 @@ public class Meter implements AutoCloseable {
 			ticketDAO.deleteTicket(ticket.getTicketId());
 			
 			System.out.println(client.getId() + " with a reduction of " + 
-					(Math.round(Math.floor(plan.getRed()  * 100) / 100)) +
+					(Math.round(Math.floor(plan.getRed()*100) / 100)) +
 					"% has left the parking lot at " + time +
 					" and paid " + fee / 100 + " dollar(s) " +
 					fee % 100 + " cent(s)");
