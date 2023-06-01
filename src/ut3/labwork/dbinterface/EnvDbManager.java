@@ -1,4 +1,4 @@
-package com.sleepycat.sample.dbinterface;
+package ut3.labwork.dbinterface;
 
 import com.sleepycat.je.DatabaseException;
 import com.sleepycat.je.Environment;
@@ -16,7 +16,7 @@ import java.io.File;
  */
 public abstract class EnvDbManager implements DbManager {
 	/* The managed database environment handle. */
-	public final Environment env;
+	protected final Environment env;
 
 	/* The current open transaction. */
 	private Transaction currentTxn;

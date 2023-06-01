@@ -1,0 +1,75 @@
+package ut3.labwork.data;
+
+import com.sleepycat.persist.model.Entity;
+import com.sleepycat.persist.model.PrimaryKey;
+
+/**
+ * A Ticket represents a parking ticket issued by a
+ * {@link com.sleepycat.sample.park.Meter}.
+ */
+@Entity
+public class Ticket {
+	/* The ticket id. */
+	@PrimaryKey(sequence = "TicketIdSeq")
+	private Long ticketId;
+	
+	/* The ticket id. */
+	private String clientId;
+
+	/* The id of the parking meter issuing this ticket. */
+	private String meterId;
+
+	/* The issuing time of this ticket, represented as milliseconds after epoch. */
+	private Long issuingTime;
+
+	/**
+	 * Primary constructor.
+	 *
+	 * @param clientId    the client id
+	 * @param ticketId    the ticket id
+	 * @param meterId     the parking meter id
+	 * @param issuingTime the time this ticket is issued
+	 */
+	public Ticket(String clientId, Long ticketId, String meterId, Long issuingTime) {
+		this.clientId = clientId;
+		this.ticketId = ticketId;
+		this.meterId = meterId;
+		this.issuingTime = issuingTime;
+	}
+	
+	/**
+	 * Get the client id.
+	 *
+	 * @return the id of the ticket
+	 */
+	public String getClientId() {
+		return clientId;
+	}
+
+	/**
+	 * Get the ticket id.
+	 *
+	 * @return the id of the ticket
+	 */
+	public Long getTicketId() {
+		return ticketId;
+	}
+
+	/**
+	 * Get the id of the issuing parking meter
+	 *
+	 * @return the parking meter id
+	 */
+	public String getMeterId() {
+		return meterId;
+	}
+
+	/**
+	 * Get the time this ticket is issued
+	 *
+	 * @return the issuing time
+	 */
+	public Long getIssuingTime() {
+		return issuingTime;
+	}
+}
